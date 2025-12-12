@@ -23,18 +23,26 @@ Actor Runtime
 
 ## Пример IR
 
-**Исходный код:**
+**Исходный код (используем аннотированные типы для emit):**
 ```fujin
-actor @processTask(msg: Task) {
+type @task(Task) = { id: u64, payload: string, status: string }
+type @taskResult(TaskResult) = {
+  type: "result",
+  id: u64,
+  status: string,
+  payload: string
+}
+
+actor @processTask(msg) {
   msg.status = "processing"
   const output = msg.payload + "_done"
   
-  emit {
+  emit @taskResult({
     type: "result",
     id: msg.id,
     status: msg.status,
     payload: output
-  }
+  })
 }
 ```
 
@@ -48,6 +56,7 @@ actor @processTask(ptr_msg):
   append "_done"
   
   alloc message
+  store @taskResult.typeHash
   store "result"
   store msg.id
   store msg.status

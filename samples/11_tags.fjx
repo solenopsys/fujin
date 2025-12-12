@@ -1,134 +1,114 @@
-
-
-type @click( ButtonClick)={
-    id: string;
-    text: string;
+type @click(ButtonClick) = {
+  id: string
+  text: string
 }
 
-type @button( Button) = {
-    class: string;
-    click: action;
+type @button(Button) = {
+  class: string
+  click: action
 }
 
-actor RedButton{
-    <button
-      class="px-4 py-2 bg-blue-600 text-white rounded"
-      onClick=@click
-    >
-      Press
-    </button>
- }
-
- actor @click(msg) {
-
+// Простой тег-кнопка
+actor @RedButton(msg) {
+  <button
+    class="px-4 py-2 bg-blue-600 text-white rounded"
+    onClick=@click
+  >
+    Press
+  </button>
 }
 
+actor @click(msg) {
+  // обработка клика (пример)
+}
 
-  type @loop Loop = {
-    each: string;
-    children: Array<Li>;
+// Цикл генерации элементов
+type @loop(Loop) = {
+  each: string
+  children: Array<Element>
+}
+
+actor @loop(msg) {
+  const items = state(msg.each)
+  for (let i: u32 = 0; i < items.length; i++) {
+    const id = items[i]
+    for (let j: u32 = 0; j < msg.children.length; j++) {
+      const child = msg.children[j]
+      emit child.tag({ ...child, parent: `${msg.each}.${id}` })
+    }
   }
+}
 
-    actor @loop(msg: Loop) {
-      on state(msg.each) -> {
-        for (id in state(msg.each)) {
-          for (child in msg.children) {
-            emit child.tag { ...child, parent: `${msg.each}.${id}` };
-          }
-        }
-      }
-    }
+// Базовые типы тегов
+type @div(Div) = {
+  id: string
+  class: string
+  parent: string
+  children: Array<Element>
+}
 
+type @li(Li) = {
+  id: string
+  class: string
+  parent: string
+  children: Array<Element>
+}
 
-    actor RenderList {
-      <ul>
-        <for each="items">
-          <li bind="items.{id}">{name}</Li>
-        </for>
-      </ul>
-    }
+type @ul(Ul) = {
+  id: string
+  class: string
+  parent: string
+  children: Array<Element>
+}
 
+type @span(Span) = {
+  id: string
+  class: string
+  parent: string
+  text: string
+}
 
+type Element = Div | Li | Ul | Span
 
-    type @div Div  = {
-      id: string;
-      class: string;
-      children: Array<Div | Span | For>;
-    }
+actor @div | @li | @ul (msg) {
+  emit @render({
+    tag: @.name,
+    id: msg.id,
+    class: msg.class,
+    parent: msg.parent
+  })
 
-   type @render renderElement = {
-      id: string;
-      class: string;
-      parent: string;
-    }
+  for (let i: u32 = 0; i < msg.children.length; i++) {
+    const child = msg.children[i]
+    emit child.tag({ ...child, parent: msg.id })
+  }
+}
 
+actor @span(msg) {
+  emit @render({
+    tag: @.name,
+    id: msg.id,
+    class: msg.class,
+    parent: msg.parent,
+    text: msg.text
+  })
+}
 
-    actor @div {
-      emit @render { tag: "div", id, class, parent };
-
-      for (child in children) {
-        emit child.tag { ...child, parent: id };
-      }
-    }
-
-
-    type @div(Div) = {
-      id: string;
-      class: string;
-      parent: string;
-      children: Array<Element>;
-    }
-
-    type @li(Li) = {
-      id: string;
-      class: string;
-      parent: string;
-      children: Array<Element>;
-    }
-
-    type @ul(Ul) = {
-      id: string;
-      class: string;
-      parent: string;
-      children: Array<Element>;
-    }
-
-    type @span(Span) = {
-      id: string;
-      class: string;
-      parent: string;
-      text: string;
-    }
-
-    type Element = Div | Li | Ul | Span;
-
-    actor @div | @li | @ul (msg) {
-      emit @render({ @.name, msg.id, msg.class, msg.parent });
-      for (child in msg.children) {
-        emit child.tag { ...child, parent: msg.id };
-      }
-    }
-
-    actor @span (msg) {
-      emit @render { @.name, msg.id, msg.class, msg.parent, msg.text };
-    }
-
-
-
-
-    // example logic
-    // actor @TodoApp(msg: TodoMsg) {
-    //   emit { type: "div", id: "1", class: "p-4" };
-    //   emit { type: "input", id: "2", parent: "1", value: msg.newText };
-    //   emit { type: "ul", id: "3", parent: "1" };
-
-    //   for (item in msg.todos) {
-    //     emit { type: "li", id: `li-${item.id}`, parent: "3" };
-    //     emit { type: "span", id: `span-${item.id}`, parent: `li-${item.id}`, text: item.text };
-    //     emit { type: "button", id: `btn-${item.id}`, parent: `li-${item.id}`, text: "✕" };
-    //   }
-
-    //   for (id in removed(msg.todos)) {
-    //     emit { type: "remove", id: `li-${id}` };
-    //   }
-    // }
+// example logic
+// actor @TodoApp(msg: TodoMsg) {
+//   emit { type: "div", id: "1", class: "p-4" }
+//   emit { type: "input", id: "2", parent: "1", value: msg.newText }
+//   emit { type: "ul", id: "3", parent: "1" }
+//
+//   for (let i: u32 = 0; i < msg.todos.length; i++) {
+//     const item = msg.todos[i]
+//     emit { type: "li", id: `li-${item.id}`, parent: "3" }
+//     emit { type: "span", id: `span-${item.id}`, parent: `li-${item.id}`, text: item.text }
+//     emit { type: "button", id: `btn-${item.id}`, parent: `li-${item.id}`, text: "✕" }
+//   }
+//
+//   for (let i: u32 = 0; i < removed(msg.todos).length; i++) {
+//     const id = removed(msg.todos)[i]
+//     emit { type: "remove", id: `li-${id}` }
+//   }
+// }

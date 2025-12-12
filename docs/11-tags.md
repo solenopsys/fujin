@@ -17,7 +17,9 @@
 В файлах `.fjx` можно использовать JSX-подобный синтаксис для описания UI:
 
 ```fujin
-actor RedButton {
+type @uiEmpty(UIEmpty) = {}
+
+actor @RedButton(msg) {
   <button
     class="px-4 py-2 bg-blue-600 text-white rounded"
     onClick=@click
@@ -30,12 +32,12 @@ actor RedButton {
 Этот код компилируется в:
 
 ```fujin
-actor RedButton {
-  emit @button {
+actor @RedButton(msg) {
+  emit @button({
     class: "px-4 py-2 bg-blue-600 text-white rounded",
     onClick: @click,
     children: ["Press"]
-  }
+  })
 }
 ```
 
@@ -58,12 +60,12 @@ type @button(Button) = {
 
 ```fujin
 // button-actor.fjs
-actor @button(msg: Button) {
-  emit @render {
+actor @button(msg) {
+  emit @render({
     tag: "button",
     class: msg.class,
     children: msg.children
-  }
+  })
   
   // Регистрируем обработчик клика
   registerHandler(msg.onClick)
@@ -74,7 +76,7 @@ actor @button(msg: Button) {
 
 ```fujin
 // component.fjx
-actor MyComponent {
+actor @MyComponent(msg) {
   <button class="btn-primary" onClick=@handleClick>
     Click me
   </button>
@@ -86,12 +88,12 @@ actor MyComponent {
 Компилятор преобразует JSX в вызов актора:
 
 ```fujin
-actor MyComponent {
-  emit @button {
+actor @MyComponent(msg) {
+  emit @button({
     class: "btn-primary",
     onClick: @handleClick,
     children: ["Click me"]
-  }
+  })
 }
 ```
 
@@ -102,7 +104,7 @@ actor MyComponent {
 FJX поддерживает вложенность:
 
 ```fujin
-actor Panel {
+actor @Panel(msg) {
   <div class="panel">
     <h1>Title</h1>
     <p>Content here</p>
@@ -114,15 +116,15 @@ actor Panel {
 Компилируется в:
 
 ```fujin
-actor Panel {
-  emit @div {
+actor @Panel(msg) {
+  emit @div({
     class: "panel",
     children: [
       { tag: @h1, children: ["Title"] },
       { tag: @p, children: ["Content here"] },
       { tag: @button, onClick: @save, children: ["Save"] }
     ]
-  }
+  })
 }
 ```
 
@@ -141,12 +143,12 @@ type @click(ClickEvent) = {
 }
 
 // Актор-обработчик
-actor @click(msg: ClickEvent) {
-  emit @log { message: `Clicked at ${msg.x}, ${msg.y}` }
+actor @click(msg) {
+  emit @log({ message: `Clicked at ${msg.x}, ${msg.y}` })
 }
 
 // Использование в теге
-actor Button {
+actor @Button(msg) {
   <button id="btn-1" onClick=@click>
     Click me
   </button>
@@ -160,7 +162,7 @@ actor Button {
 ### Циклы в JSX
 
 ```fujin
-actor TodoList {
+actor @TodoList(msg) {
   <ul>
     <for each="items">
       <li bind="items.{id}">{name}</li>
@@ -172,21 +174,21 @@ actor TodoList {
 Компилируется в:
 
 ```fujin
-actor TodoList {
-  emit @ul {
+actor @TodoList(msg) {
+  emit @ul({
     children: state("items").map(item => ({
       tag: @li,
       bind: `items.${item.id}`,
       children: [item.name]
     }))
-  }
+  })
 }
 ```
 
 ### Условный рендеринг
 
 ```fujin
-actor ConditionalContent {
+actor @ConditionalContent(msg) {
   <div>
     {if (state.showMessage)} {
       <p>Message is visible</p>
@@ -217,24 +219,25 @@ type @span(Span) = {
 type Element = Div | Span | Button
 
 // actors.fjs
-actor @div(msg: Div) {
-  emit @render {
+actor @div(msg) {
+  emit @render({
     tag: "div",
     id: msg.id,
     class: msg.class
-  }
+  })
   
-  for (child in msg.children) {
-    emit child.tag { ...child, parent: msg.id }
+  for (let i: u32 = 0; i < msg.children.length; i++) {
+    const child = msg.children[i]
+    emit child.tag({ ...child, parent: msg.id })
   }
 }
 
-actor @span(msg: Span) {
-  emit @render {
+actor @span(msg) {
+  emit @render({
     tag: "span",
     id: msg.id,
     text: msg.text
-  }
+  })
 }
 ```
 
@@ -264,15 +267,16 @@ type @article(Article) = {
 }
 
 // Один актор для всех трёх тегов
-actor @div | @section | @article (msg) {
-  emit @render {
+actor @div | @section | @article (msg: Element) {
+  emit @render({
     tag: @.name,  // имя текущего тега
     id: msg.id,
     class: msg.class
-  }
+  })
   
-  for (child in msg.children) {
-    emit child.tag { ...child, parent: msg.id }
+  for (let i: u32 = 0; i < msg.children.length; i++) {
+    const child = msg.children[i]
+    emit child.tag({ ...child, parent: msg.id })
   }
 }
 ```
@@ -338,10 +342,12 @@ type @button(Button) = {
 type Element = Div | Input | Ul | Li | Button
 
 // TodoApp.fjx
-actor TodoApp {
+type @todoState(TodoState) = { todos: Array<Li>, newTodo: string }
+
+actor @TodoApp(msg) {
   <div class="app">
     <input
-      value={state.newTodo}
+      value={msg.newTodo}
       onChange=@handleInput
     />
     
@@ -351,17 +357,17 @@ actor TodoApp {
           text={item.text}
           onDelete=@deleteTodo
         />
-      </for>
+      </loop>
     </ul>
   </div>
 }
 
-actor @handleInput(msg: InputChange) {
-  emit @updateState { field: "newTodo", value: msg.value }
+actor @handleInput(msg) {
+  emit @updateState({ field: "newTodo", value: msg.value })
 }
 
-actor @deleteTodo(msg: DeleteEvent) {
-  emit @removeItem { id: msg.itemId }
+actor @deleteTodo(msg) {
+  emit @removeItem({ id: msg.itemId })
 }
 ```
 

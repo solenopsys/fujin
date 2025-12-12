@@ -6,8 +6,8 @@ Fujin использует 4 типа файлов с **иерархией на�
 
 ```
 .fjc (базовый язык: структуры, акторы, целочисленная арифметика)
-  ↓ наследует всё + добавляет float, аннотации и сериализацию
-.fjt (типы и интерфейсы: + float, + @name(), + сериализация)
+  ↓ наследует всё + добавляет float и расширенную сериализацию
+.fjt (типы и интерфейсы: + float, + wire format)
   ↓ наследует всё + добавляет расширенные операции
 .fjs (скрипты: расширенные операции)
   ↓ наследует всё + добавляет теги и каскадные обработчики
@@ -59,15 +59,15 @@ actor @transfer(msg) {
     updateBalance(msg.from, balance - msg.amount)
     updateBalance(msg.to, getBalance(msg.to) + msg.amount)
     
-    emit @transferResult {
+    emit @transferResult({
       success: true,
       newBalance: balance - msg.amount
-    }
+    })
   } else {
-    emit @transferResult {
+    emit @transferResult({
       success: false,
       newBalance: balance
-    }
+    })
   }
 }
 ```
@@ -116,21 +116,28 @@ type @userCreated(UserCreated) = {
   timestamp: u64
 }
 
+type @notification(Notification) = {
+  text: string
+}
+
+type @scores(Scores) = { scores: Array<f64> }
+type @ratingAverage(RatingAverage) = { average: f64 }
+
 type Role = "admin" | "user" | "guest"
 
 // Актор с аннотированным типом
 actor @userCreated(msg) {
-  emit @notification { text: `User ${msg.userId} created` }
+  emit @notification({ text: `User ${msg.userId} created` })
 }
 
 // Можем использовать float
-actor @calculateRating(scores) {
+actor @calculateRating(msg) {
   let sum: f64 = 0.0
-  for (score in scores) {
-    sum = sum + score
+  for (let i: u32 = 0; i < msg.scores.length; i++) {
+    sum = sum + msg.scores[i]
   }
-  const average: f64 = sum / scores.length
-  emit { average: average }
+  const average: f64 = sum / msg.scores.length
+  emit @ratingAverage({ average })
 }
 ```
 
@@ -174,9 +181,10 @@ actor @calculateMetrics(msg) {
   let weightedSum: f64 = 0.0
   let totalWeight: f64 = 0.0
   
-  for (i in 0..msg.values.length) {
-    sum = sum + msg.values[i]
-    weightedSum = weightedSum + (msg.values[i] * msg.weights[i])
+  for (let i: u32 = 0; i < msg.values.length; i++) {
+    const value = msg.values[i]
+    sum = sum + value
+    weightedSum = weightedSum + (value * msg.weights[i])
     totalWeight = totalWeight + msg.weights[i]
   }
   
@@ -184,17 +192,17 @@ actor @calculateMetrics(msg) {
   const weightedAvg = weightedSum / totalWeight
   
   let variance: f64 = 0.0
-  for (i in 0..msg.values.length) {
+  for (let i: u32 = 0; i < msg.values.length; i++) {
     const diff = msg.values[i] - avg
     variance = variance + (diff * diff)
   }
   variance = variance / msg.values.length
   
-  emit @metricsResult {
+  emit @metricsResult({
     average: avg,
     weightedAverage: weightedAvg,
     variance: variance
-  }
+  })
 }
 ```
 
@@ -231,10 +239,18 @@ type @button(Button) = {
   onClick: action
 }
 
-actor TodoApp {
+type @todoItem(TodoItem) = { id: u64, text: string }
+type @todoAppProps(TodoAppProps) = { todos: Array<TodoItem>, newTodo: string }
+type @inputChange(InputChange) = { value: string }
+type @buttonClick(ButtonClick) = { itemId?: u64, newTodo?: string }
+type @updateState(UpdateState) = { field: string, value: string }
+type @addItem(AddItem) = { text: string }
+type @removeItem(RemoveItem) = { id: u64 }
+
+actor @TodoApp(msg) {
   <div class="todo-app">
     <input
-      value={state.newTodo}
+      value={msg.newTodo}
       onChange=@handleInput
     />
     
@@ -253,17 +269,17 @@ actor TodoApp {
   </div>
 }
 
-actor @handleInput(msg: InputChange) {
-  emit @updateState { field: "newTodo", value: msg.value }
+actor @handleInput(msg) {
+  emit @updateState({ field: "newTodo", value: msg.value })
 }
 
-actor @addTodo(msg: ButtonClick) {
-  emit @addItem { text: state.newTodo }
-  emit @updateState { field: "newTodo", value: "" }
+actor @addTodo(msg) {
+  emit @addItem({ text: msg.newTodo })
+  emit @updateState({ field: "newTodo", value: "" })
 }
 
-actor @deleteTodo(msg: ButtonClick) {
-  emit @removeItem { id: msg.itemId }
+actor @deleteTodo(msg) {
+  emit @removeItem({ id: msg.itemId })
 }
 ```
 
@@ -326,7 +342,6 @@ actor @deleteTodo(msg: ButtonClick) {
 
 2. **Ограничения базового языка (.fjc):**
    - `.fjc` НЕ может использовать float
-   - `.fjc` НЕ может использовать аннотации `@name()`
    - `.fjc` НЕ может использовать расширенные операции
    - Это гарантирует детерминированность и минимализм
 
@@ -337,7 +352,7 @@ actor @deleteTodo(msg: ButtonClick) {
    - UI — в `.fjx`
 
 4. **Компиляция:**
-   - `.fjc` компилируется без зависимостей от float и сериализации
+   - `.fjc` компилируется без float
    - `.fjt` добавляет wire format и type hash
    - `.fjs` компилируется с полным набором операций
    - `.fjx` компилируется с JSX и UI-логикой
@@ -355,9 +370,11 @@ type @metrics(Metrics) = {
   total: u64
 }
 
+type @result(Result) = { average: f64 }
+
 actor @metrics(msg) {
   const average = msg.total / msg.count  // целочисленное деление
-  emit @result { average: average }
+  emit @result({ average })
 }
 
 // Стало в .fjt (с float)
@@ -368,7 +385,7 @@ type @metrics(Metrics) = {
 
 actor @metrics(msg) {
   const average: f64 = msg.total / msg.count  // float деление
-  emit @result { average: average }
+  emit @result({ average })
 }
 ```
 
@@ -380,12 +397,15 @@ type @calculateAverage(CalculateAverage) = {
   values: Array<f64>
 }
 
+type @result(Result) = { average: f64 }
+type @statistics(Statistics) = { average: f64, median: f64 }
+
 actor @calculateAverage(msg) {
   let sum: f64 = 0.0
-  for (v in msg.values) {
-    sum = sum + v
+  for (let i: u32 = 0; i < msg.values.length; i++) {
+    sum = sum + msg.values[i]
   }
-  emit @result { average: sum / msg.values.length }
+  emit @result({ average: sum / msg.values.length })
 }
 
 // Стало в .fjs (расширенные операции)
@@ -398,7 +418,7 @@ actor @calculateStatistics(msg) {
   const sorted = msg.values.sort()
   const median = sorted[sorted.length / 2]
   
-  emit @statistics { average: avg, median: median }
+  emit @statistics({ average: avg, median: median })
 }
 ```
 

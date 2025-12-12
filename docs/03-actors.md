@@ -8,15 +8,15 @@
 - Работают в actor-модели
 
 ```fujin
-// Типы для сообщений
-type ProcessOut = { type: "result", data: string }
-type HandleOut  = { type: "success", id: u64 } | { type: "error", message: string }
+// Типы для сообщений (аннотированные)
+type @processOut(ProcessOut) = { type: "result", data: string }
+type @handleOut(HandleOut)  = { type: "success", id: u64 } | { type: "error", message: string }
 
 // Простой актор
 actor @processMessage(msg) {
   const result = transform(msg.data)
   const out: ProcessOut = { type: "result", data: result }
-  emit out
+  emit @processOut(out)
 }
 
 // Актор с обработкой
@@ -27,7 +27,7 @@ actor @handleRequest(msg) {
   } else {
     out = { type: "error", message: "Invalid request" }
   }
-  emit out
+  emit @handleOut(out)
 }
 ```
 

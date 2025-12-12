@@ -62,16 +62,20 @@ throw      // выброс исключения
 
 ## emit — отправка сообщений
 
-Вместо `return` акторы используют `emit` для отправки результатов:
+Вместо `return` акторы используют `emit` для отправки результатов с аннотированными типами:
 
 ```fujin
-actor @processData(msg: Data) {
+type @processDataIn(ProcessDataIn) = { valid: bool, payload: Payload }
+type @processOk(ProcessOk) = { type: "success", result: Result }
+type @processError(ProcessError) = { type: "error", message: string }
+
+actor @processData(msg) {
   if (!msg.valid) {
-    emit { type: "error", message: "Invalid data" }
+    emit @processError({ type: "error", message: "Invalid data" })
+  } else {
+    const result = transform(msg.payload)
+    emit @processOk({ type: "success", result })
   }
-  
-  const result = transform(msg)
-  emit { type: "success", result }
 }
 ```
 
@@ -82,7 +86,7 @@ try {
   const data = fetchData()
   processData(data)
 } catch (e) {
-  emit { type: "error", message: e.message }
+  emit @processError({ type: "error", message: e.message })
 } finally {
   cleanup()
 }

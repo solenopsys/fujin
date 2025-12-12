@@ -40,7 +40,7 @@ type @click(ButtonClick) = {
 
 // Актор всегда принимает аннотированный тип
 actor @click(msg) {
-  emit @log { message: `Clicked at ${msg.x}, ${msg.y}` }
+  emit @log({ message: `Clicked at ${msg.x}, ${msg.y}` })
 }
 
 // Сообщение с данными пользователя
@@ -51,7 +51,7 @@ type @userCreated(UserCreated) = {
 }
 
 actor @userCreated(msg) {
-  emit @notification { text: `User ${msg.name} created` }
+  emit @notification({ text: `User ${msg.name} created` })
 }
 ```
 
@@ -72,7 +72,7 @@ type @userCreated(UserCreated) = {
 
 actor @userCreated(msg) {
   // msg пришло через шину в сериализованном виде
-  emit @log { message: `User ${msg.name} created` }
+  emit @log({ message: `User ${msg.name} created` })
 }
 ```
 
@@ -89,7 +89,7 @@ type @taskComplete(TaskComplete) = {
 
 actor @taskComplete(msg) {
   if (msg.status === "success") {
-    emit @notification { text: `Task ${msg.taskId} completed` }
+    emit @notification({ text: `Task ${msg.taskId} completed` })
   }
 }
 ```
@@ -129,7 +129,7 @@ type @button(Button) = {
 
 // Актор-обработчик клика
 actor @click(msg) {
-  emit @log { message: `Button clicked: ${msg.id}` }
+  emit @log({ message: `Button clicked: ${msg.id}` })
 }
 
 // Использование
@@ -138,7 +138,7 @@ actor @createButton(msg) {
     class: "btn-primary",
     click: @click  // передаём ссылку на актор
   }
-  emit @render { ...btn }
+  emit @render({ ...btn })
 }
 ```
 
@@ -157,11 +157,11 @@ type @input(Input) = {
 }
 
 actor @onChange(msg) {
-  emit @updateState { field: "input", value: msg.value }
+  emit @updateState({ field: "input", value: msg.value })
 }
 
 actor @onSubmit(msg) {
-  emit @sendData { data: msg.formData }
+  emit @sendData({ data: msg.formData })
 }
 ```
 
@@ -204,7 +204,7 @@ type @request(Request) = {
 
 actor @request(msg) {
   // msg пришло через шину в сериализованном виде
-  emit @response { userId: msg.userId, status: "ok" }
+  emit @response({ userId: msg.userId, status: "ok" })
 }
 
 // Неправильно - нельзя использовать не-аннотированный тип

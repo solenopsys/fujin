@@ -91,17 +91,17 @@ actor @transfer(msg) {
     setBalance(msg.from, newFromBalance)
     setBalance(msg.to, newToBalance)
     
-    emit @transferResult {
+    emit @transferResult({
       success: true,
       fromBalance: newFromBalance,
       toBalance: newToBalance
-    }
+    })
   } else {
-    emit @transferResult {
+    emit @transferResult({
       success: false,
       fromBalance: fromBalance,
       toBalance: toBalance
-    }
+    })
   }
 }
 ```
@@ -140,12 +140,12 @@ actor @vote(msg) {
   const currentTime = getBlockTime()
   
   if (currentTime > proposal.deadline) {
-    emit @error { message: "Voting period ended" }
+    emit @error({ message: "Voting period ended" })
     return
   }
   
   if (hasVoted(msg.proposalId, msg.voter)) {
-    emit @error { message: "Already voted" }
+    emit @error({ message: "Already voted" })
     return
   }
   
@@ -165,12 +165,12 @@ actor @vote(msg) {
   const quorum: u64 = 100
   const canExecute = totalVotes >= quorum && newVotesFor > newVotesAgainst
   
-  emit @voteResult {
+  emit @voteResult({
     proposalId: msg.proposalId,
     votesFor: newVotesFor,
     votesAgainst: newVotesAgainst,
     canExecute: canExecute
-  }
+  })
 }
 ```
 
@@ -209,34 +209,34 @@ type @transactionResult(TransactionResult) = {
 
 actor @proposeTransaction(msg) {
   if (!isOwner(msg.proposer)) {
-    emit @error { message: "Not an owner" }
+    emit @error({ message: "Not an owner" })
     return
   }
   
   const txId = createTransaction(msg.to, msg.amount)
   
-  emit @transactionResult {
+  emit @transactionResult({
     txId: txId,
     approvals: 0,
     executed: false
-  }
+  })
 }
 
 actor @approveTransaction(msg) {
   if (!isOwner(msg.approver)) {
-    emit @error { message: "Not an owner" }
+    emit @error({ message: "Not an owner" })
     return
   }
   
   const tx = getTransaction(msg.txId)
   
   if (tx.executed) {
-    emit @error { message: "Already executed" }
+    emit @error({ message: "Already executed" })
     return
   }
   
   if (hasApproved(msg.txId, msg.approver)) {
-    emit @error { message: "Already approved" }
+    emit @error({ message: "Already approved" })
     return
   }
   
@@ -252,11 +252,11 @@ actor @approveTransaction(msg) {
     executed = true
   }
   
-  emit @transactionResult {
+  emit @transactionResult({
     txId: msg.txId,
     approvals: newApprovals,
     executed: executed
-  }
+  })
 }
 ```
 
@@ -360,19 +360,19 @@ let total: u64 = price * quantity  // Всегда 9995
 3. **Избегайте переполнения:**
    ```fujin
    // Проверяйте перед операциями
-   if (a > u64.max - b) {
-     emit @error { message: "Overflow" }
-     return
-   }
+  if (a > u64.max - b) {
+    emit @error({ message: "Overflow" })
+    return
+  }
    let sum = a + b
    ```
 
 4. **Явная обработка ошибок:**
    ```fujin
-   if (balance < amount) {
-     emit @error { message: "Insufficient balance" }
-     return
-   }
+  if (balance < amount) {
+    emit @error({ message: "Insufficient balance" })
+    return
+  }
    ```
 
 ---

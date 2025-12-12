@@ -8,5 +8,5 @@ actor  @in(msg) {
   const last = msg.arr.pop();
   const slice = msg.arr.slice(0, 2);
 
-  emit @out{ type: "array", len, last, slice };
+  emit @out({ type: "array", len, last, slice });
 }

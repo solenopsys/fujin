@@ -34,7 +34,7 @@ actor @loop(msg) {
     const id = items[i]
     for (let j: u32 = 0; j < msg.children.length; j++) {
       const child = msg.children[j]
-      emit child.tag({ ...child, parent: `${msg.each}.${id}` })
+      emit child.tag({ ...child, parent: msg.each.concat(".").concat(id) })
     }
   }
 }

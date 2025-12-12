@@ -1,6 +1,6 @@
 
 type @pm(PrimitivesMsg) = {};
-struct @po(PrimitivesOut) = {  x: i32, y: f64, flag: bool, name: string };
+type @po(PrimitivesOut) = {  x: i32, y: f64, flag: bool, name: string };
 
 actor  @pm {
   const x: i32 = 42;

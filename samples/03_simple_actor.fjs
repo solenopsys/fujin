@@ -1,5 +1,3 @@
-messages { AddMsg, SumOut }
-
 type @add(AddMsg) = { a: i32, b: i32 };
 type @sum(SumOut) = { type: "sum", value: i32 };
 

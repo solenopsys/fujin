@@ -65,12 +65,12 @@ throw      // выброс исключения
 Вместо `return` акторы используют `emit` для отправки результатов:
 
 ```fujin
-actor processData(data: Data) {
-  if (!data.valid) {
+actor @processData(msg: Data) {
+  if (!msg.valid) {
     emit { type: "error", message: "Invalid data" }
   }
   
-  const result = transform(data)
+  const result = transform(msg)
   emit { type: "success", result }
 }
 ```

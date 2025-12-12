@@ -117,7 +117,7 @@ actor RedButton{
 
 
     // example logic
-    // actor TodoApp(msg: TodoMsg) {
+    // actor @TodoApp(msg: TodoMsg) {
     //   emit { type: "div", id: "1", class: "p-4" };
     //   emit { type: "input", id: "2", parent: "1", value: msg.newText };
     //   emit { type: "ul", id: "3", parent: "1" };

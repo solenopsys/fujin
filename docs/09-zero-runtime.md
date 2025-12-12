@@ -25,14 +25,14 @@ Actor Runtime
 
 **Исходный код:**
 ```fujin
-actor processTask(task: Task) {
-  task.status = "processing"
-  const output = task.payload + "_done"
+actor @processTask(msg: Task) {
+  msg.status = "processing"
+  const output = msg.payload + "_done"
   
   emit {
     type: "result",
-    id: task.id,
-    status: task.status,
+    id: msg.id,
+    status: msg.status,
     payload: output
   }
 }
@@ -40,17 +40,17 @@ actor processTask(task: Task) {
 
 **Концептуальный IR:**
 ```
-actor processTask(ptr_task):
-  load task.status
+actor @processTask(ptr_msg):
+  load msg.status
   store "processing"
   
-  load task.payload
+  load msg.payload
   append "_done"
   
   alloc message
   store "result"
-  store task.id
-  store task.status
+  store msg.id
+  store msg.status
   store payload
   emit message
 ```

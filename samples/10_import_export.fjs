@@ -1,0 +1,11 @@
+import { helper } from "./utils";
+
+type @in(UserMsg) = { id: u64, name: string };
+type @out(NotifiedOut) = { type: "notified", userId: u64 };
+
+actor @in(msg) {
+  helper(msg.id);
+  emit @out({ type: "notified", userId: msg.id });
+}
+
+export { notifyUser };

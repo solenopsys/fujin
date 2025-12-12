@@ -1,0 +1,8 @@
+messages { AddMsg, SumOut }
+
+type @add(AddMsg) = { a: i32, b: i32 };
+type @sum(SumOut) = { type: "sum", value: i32 };
+
+actor @add(msg) {
+  emit @sum({ type: "sum", value: msg.a + msg.b });
+}

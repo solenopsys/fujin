@@ -1,0 +1,16 @@
+
+type Point = {
+  x: i32
+  y: i32
+}
+
+type @user(User) = {
+  id: u64
+  name: string
+  email?: string
+};
+
+type Task = {
+  id: u64
+  status: "pending" | "done"
+}

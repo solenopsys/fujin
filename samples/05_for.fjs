@@ -1,0 +1,12 @@
+
+type @in(SumMsg) = { arr: i32[] };
+type @out(SumOut) = { type: "sum", total: i32 };
+
+
+actor  @in(msg) {
+  let total: i32 = 0;
+  for (let i: i32 = 0; i < msg.arr.length; i++) {
+    total += msg.arr[i];
+  }
+  emit @out({ type: "sum", total });
+}

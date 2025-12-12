@@ -1,0 +1,11 @@
+
+
+type Point = { x: i32, y: i32 };
+type @in(DistanceMsg) = { point: Point };
+type @out(DistanceOut) = { type: "distance", value: i32 };
+
+actor  @in(msg) {
+  const {x, y} = msg.point;
+  const [a, b] = [1, 2];
+  emit @out( { type: "distance", value: x + y + a + b });
+}

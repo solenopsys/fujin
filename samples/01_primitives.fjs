@@ -1,0 +1,12 @@
+
+type @pm(PrimitivesMsg) = {};
+struct @po(PrimitivesOut) = {  x: i32, y: f64, flag: bool, name: string };
+
+actor  @pm {
+  const x: i32 = 42;
+  const y: f64 = 3.14;
+  const flag: bool = true;
+  const name: string = "test";
+
+  emit @po({  x, y, flag, name });
+}

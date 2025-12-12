@@ -1,0 +1,12 @@
+
+type @in(ArrayMsg) = { arr: i32[] };
+type @out(ArrayOut) = { type: "array", len: i32, last: i32 | null, slice: i32[] };
+
+actor  @in(msg) {
+  const len = msg.arr.length;
+  msg.arr.push(42);
+  const last = msg.arr.pop();
+  const slice = msg.arr.slice(0, 2);
+
+  emit @out{ type: "array", len, last, slice };
+}

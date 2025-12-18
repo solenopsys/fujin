@@ -52,29 +52,29 @@
 
 ### Структура языка
 
-0. [**Структура файлов**](./docs/00-file-structure.md)
+0. [**Структура файлов**](./docs/lang/00-file-structure.md)
    - Иерархия типов файлов (.fjt → .fjc → .fjs → .fjx)
    - Наследование возможностей
    - Когда использовать какой тип файла
 
 ### Основы языка
 
-1. [**Переменные и примитивы**](./docs/01-variables-primitives.md)
+1. [**Переменные и примитивы**](./docs/lang/01-variables-primitives.md)
    - Объявление переменных (let, const)
    - Примитивные типы (u8-u64, i8-i64, f32, f64, bool, byte, string)
    - Литералы
 
-2. [**Операторы**](./docs/02-operators.md)
+2. [**Операторы**](./docs/lang/02-operators.md)
    - Арифметические, логические
    - Операторы сравнения (только строгие ===, !==)
    - Присваивание
 
-3. [**Акторы**](./docs/03-actors.md)
+3. [**Акторы**](./docs/lang/03-actors.md)
    - `actor` вместо `function`
    - `emit` для отправки сообщений
    - Определение и использование акторов
 
-4. [**Управляющие конструкции**](./docs/04-control-flow.md)
+4. [**Управляющие конструкции**](./docs/lang/04-control-flow.md)
    - Условия (if-else, switch)
    - **Только for** — единственный цикл!
    - `emit` вместо `return`
@@ -82,7 +82,7 @@
 
 ### Структуры данных
 
-5. [**Массивы и объекты**](./docs/05-data-structures.md)
+5. [**Массивы и объекты**](./docs/lang/05-data-structures.md)
    - Массивы (минимальный набор методов: push, pop, length, slice)
    - Plain objects (POJO) без методов
    - Строки (минимальный набор: length, slice, indexOf, split, concat)
@@ -90,21 +90,21 @@
 
 ### Система типов и Wire Format
 
-6. [**Типы**](./docs/06-types-protocols.md)
+6. [**Типы**](./docs/lang/06-types-protocols.md)
    - **Порядок полей имеет значение!**
    - Type aliases, Union types
    - Generics, Nullable
 
 ### Модульность
 
-7. [**Модульная система**](./docs/07-modules.md)
+7. [**Модульная система**](./docs/lang/07-modules.md)
    - Import/Export (именованный и default)
    - Экспорт типов
    - Структура модулей
 
 ### Аннотации и теги
 
-8. [**Аннотации**](./docs/08-annotations.md)
+8. [**Аннотации**](./docs/lang/08-annotations.md)
    - Аннотация `@name()` для сериализуемых типов
    - Ключевое слово `action` для ссылок на акторы
    - Передача через шину и асинхронные вызовы
@@ -112,12 +112,12 @@
 
 ### Архитектура
 
-9. [**Zero-Runtime модель**](./docs/09-zero-runtime.md)
+9. [**Zero-Runtime модель**](./docs/lang/09-zero-runtime.md)
    - Никаких скрытых аллокаций
    - Lowering: Fujin → IR → WASM → Actor Runtime
    - Детерминированность
 
-10. [**Binary Layout**](./docs/10-binary-layout.md)
+10. [**Binary Layout**](./docs/lang/10-binary-layout.md)
 
 - Упаковочный формат (как Cap'n Proto)
 - Размеры и alignment примитивов
@@ -125,7 +125,7 @@
 - Type hash при компиляции
 - Аннотации (@packed, @align)
 
-11. [**Теги**](./docs/11-tags.md)
+11. [**Теги**](./docs/lang/11-tags.md)
 
 - Теги как JSX-синтаксис для акторов
 - Вложенные компоненты и `children`
@@ -134,7 +134,7 @@
 
 ### Специализированные файлы
 
-12. [**Смартконтракты (.fjc)**](./docs/12-smartcontracts.md)
+12. [**Смартконтракты (.fjc)**](./docs/lang/12-smartcontracts.md)
 
 - Детерминированная логика без float
 - Работа с деньгами в целых числах

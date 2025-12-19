@@ -10,7 +10,7 @@ BinaryModule {
   messages: Message[]           // сообщения + ссылка на payload plan
   schema: MessageSchema         // описание типов для Plan
   plans: PlanDesc[]             // layout полей (offset/slot_size/kind)
-  code_blocks: CodeBlock[]      // байткод
+  code_blocks: CodeBlock[]      // байткод + требования к стеку
   dispatch: DispatchEntry[]     // message_id -> code_id (+ payload_plan)
   exports: u32[]                // индексы экспортируемых messages
 }
@@ -74,6 +74,7 @@ Enum в языке нет, поэтому `field_type`/`elem_kind` не имею
 ```
 CodeBlock {
   frame_size: i64
+  stack_size: u32               // требуемый объём стека (4 KiB * 2ⁿ)
   params: Param[]
   locals: Param[]
   operations: Operation[]
@@ -138,7 +139,7 @@ Opcode диапазоны и параметры описаны в `docs/ir/comma
 1. **Вход:** runtime получает `message_id` из транспорта и cap-пакет payload (id внутри payload нет).
 2. **Dispatch:** по `message_id` ищет `DispatchEntry`, берёт `code_id` и `payload_plan_id`.
 3. **Access:** строит view по `plans[payload_plan_id]` и читает поля напрямую из буфера (zero-copy строки/bytes, без материализации StructValue).
-4. **Execute:** выполняет `code_blocks[code_id]`, мапит msg на стек по Param.type_kind/type_name, работает с view.
+4. **Execute:** запрашивает у глобального buddy-аллокатора стековый буфер `stack_size` (минимум 4 KiB, степенная по двум), мапит msg на стек по Param.type_kind/type_name, работает с view; динамические `alloc_bytes`/list_* используют тот же аллокатор.
 5. **Output:** `emit`/`call` используют `message_id`; payload формируется по связанному Plan (Builder/serializePlan копирует данные в выходной буфер).
 
 ## Пример модуля (логическая структура)
@@ -168,6 +169,7 @@ Opcode диапазоны и параметры описаны в `docs/ir/comma
   }],
   "code_blocks": [{
     "frame_size": 0,
+    "stack_size": 4096,
     "params": [{"name": "msg", "type_kind": 4, "type_name": "Ping", "offset": 0}],
     "locals": [],
     "operations": [

@@ -12,8 +12,7 @@
 | 0x3A      | mul        | left, right, dst | Умножение           |
 | 0x3B      | div        | left, right, dst | Деление             |
 | 0x3C      | mod        | left, right, dst | Остаток             |
-| 0x3D      | pow        | left, right, dst | Степень             |
-| 0x3E–0x3F | —          | —                | (резерв)            |
+| 0x3D–0x3F | —          | —                | (резерв)            |
 | 0x40      | eq         | left, right, dst | Равно               |
 | 0x41      | neq        | left, right, dst | Не равно            |
 | 0x42      | lt         | left, right, dst | Меньше              |
@@ -24,9 +23,22 @@
 | 0x47      | or         | left, right, dst | Логическое ИЛИ      |
 | 0x48      | not        | left, dst        | Логическое НЕ       |
 | 0x49      | neg        | left, dst        | Унарный минус       |
-| 0x4A      | plus       | left, dst        | Унарный плюс        |
-| 0x4B      | inc        | left, dst        | ++ (префикс)        |
-| 0x4C      | dec        | left, dst        | -- (префикс)        |
-| 0x4D      | post_inc   | left, dst        | ++ (постфикс)       |
-| 0x4E      | post_dec   | left, dst        | -- (постфикс)       |
-| 0x4F      | —          | —                | (резерв)            |
+| 0x4A–0x4F | —          | —                | (резерв)            |
+
+## Удалённые операции и их реализация в компиляторе
+
+### Унарный плюс (`+x`)
+**Удалён:** 0x4A `plus`  
+**Реализация:** `mov src, dst` - простое копирование значения
+
+### Инкремент/декремент
+**Удалёны:** 0x4B `inc`, 0x4C `dec`, 0x4D `post_inc`, 0x4E `post_dec`  
+**Реализация:**
+- `++x` → `const_i64(1, tmp); add(x, tmp, x)`
+- `x++` → `mov(x, result); const_i64(1, tmp); add(x, tmp, x)`
+- `--x` → `const_i64(1, tmp); sub(x, tmp, x)`
+- `x--` → `mov(x, result); const_i64(1, tmp); sub(x, tmp, x)`
+
+### Степень
+**Удалён:** 0x3D `pow`  
+**Реализация:** Через вызов библиотечной функции `pow(base, exp)` или цикл умножения для целых степеней

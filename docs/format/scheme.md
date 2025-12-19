@@ -91,14 +91,20 @@ Param {
 
 ```
 Operation {
-  kind: u8
-  variable: string      // для load_local/store_local
-  value_int: i64        // const_i64/const_i32
-  value_float: f64      // const_f64
-  value_str: string     // const_string
-  message_id: u32       // для emit/call: индекс в messages
-  arg_count: u32        // для call/emit
+  kind: u8              // opcode, см. docs/ir/commands_future.md
+  op_a: i64             // универсальный параметр A (offset/id/imm)
+  op_b: i64             // универсальный параметр B
+  op_c: i64             // универсальный параметр C
+  op_str: string        // строковый литерал (для const_string)
 }
+
+Интерпретация `op_a`/`op_b`/`op_c` зависит от opcode и совпадает с таблицами в `docs/ir/*.md`.
+Примеры:
+- `load_field_scalar` (0x10): op_a=plan_id, op_b=field_idx, op_c=dst_offset
+- `set_field_scalar` (0x29): op_a=builder_slot, op_b=field_idx, op_c=src_offset
+- `emit_plan` (0x2F): op_a=builder_slot, op_b=message_id, op_c=plan_id
+- `const_i64` (0x30): op_a=imm, op_b=dst_offset
+- `branch_if_true` (0x20): op_a=cond_offset, op_b=label
 ```
 
 ## 5) DispatchEntry
@@ -117,41 +123,15 @@ DispatchEntry {
 
 ## OpCodes (Operation.kind)
 
-Коды операций остаются прежними:
+Opcode диапазоны и параметры описаны в `docs/ir/commands_future.md` и разбиты по файлам `docs/ir/*.md`:
+- 0x10–0x17: ввод/MessageView (`input.md`) — plan_id/field_idx/offset
+- 0x18–0x1F: стек/срезы/буферы (`stack.md`)
+- 0x20–0x27: контроль потока (`control.md`)
+- 0x28–0x2F: Builder/emit (`output.md`)
+- 0x30–0x4F: арифметика/логика (`arith.md`)
+- 0x50–0x57: локальные структуры (`struct.md`)
 
-| Code | Name | Description |
-|------|------|-------------|
-| 0 | `const_i64` | Push i64 constant |
-| 1 | `const_i32` | Push i32 constant |
-| 2 | `const_f64` | Push f64 constant |
-| 3 | `const_string` | Push string constant |
-| 4 | `const_true` | Push boolean true |
-| 5 | `const_false` | Push boolean false |
-| 6 | `const_null` | Push null |
-| 10 | `load_local` | Load local variable |
-| 11 | `store_local` | Store to local variable |
-| 20 | `add_i64` | i64 addition |
-| 21 | `sub_i64` | i64 subtraction |
-| 22 | `mul_i64` | i64 multiplication |
-| 23 | `div_i64` | i64 division |
-| 24 | `mod_i64` | i64 modulo |
-| 30 | `add_f64` | f64 addition |
-| 31 | `sub_f64` | f64 subtraction |
-| 40 | `eq` | Equality (===) |
-| 41 | `neq` | Inequality (!==) |
-| 42 | `lt` | Less than (<) |
-| 43 | `lte` | Less than or equal (<=) |
-| 44 | `gt` | Greater than (>) |
-| 45 | `gte` | Greater than or equal (>=) |
-| 50 | `logical_and` | Logical AND (&&) |
-| 51 | `logical_or` | Logical OR (||) |
-| 52 | `logical_not` | Logical NOT (!) |
-| 60 | `emit` | Emit message to bus (by message_id) |
-| 61 | `call` | Function call (by message_id) |
-| 62 | `assert` | Assert statement |
-| 70 | `return_value` | Return with value |
-| 71 | `return_void` | Return void |
-| 255 | `unknown` | Unknown operation (error) |
+Каждый opcode использует `op_a`/`op_b`/`op_c` как позиционные параметры (offset/plan_id/field_idx/label/imm), см. таблицы.
 
 ## Модель выполнения
 
@@ -191,8 +171,12 @@ DispatchEntry {
     "params": [{"name": "msg", "type_kind": 4, "type_name": "Ping", "offset": 0}],
     "locals": [],
     "operations": [
-      {"kind": 10, "variable": "msg"},  // load_local msg
-      {"kind": 60, "message_id": 0, "arg_count": 1} // emit @ping
+      {"kind": 0x10, "op_a": 0, "op_b": 0, "op_c": 0},   // load_field_scalar(plan=0, field=0 runId) -> slot0
+      {"kind": 0x11, "op_a": 0, "op_b": 1, "op_c": 8},   // load_field_slice(plan=0, field=1 payload) -> slot8
+      {"kind": 0x28, "op_a": 0, "op_b": 0},              // init_builder(plan=0) -> builder slot0
+      {"kind": 0x29, "op_a": 0, "op_b": 0, "op_c": 0},   // set_field_scalar(builder0, field=0, src=slot0)
+      {"kind": 0x2A, "op_a": 0, "op_b": 1, "op_c": 8},   // set_field_slice(builder0, field=1, src=slot8)
+      {"kind": 0x2F, "op_a": 0, "op_b": 0, "op_c": 0}    // emit_plan(builder0, message_id=0, plan_id=0)
     ]
   }],
   "dispatch": [{
